@@ -1,4 +1,4 @@
-﻿{
+{
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
@@ -32,13 +32,44 @@
         "description": "The name of the SQl Database"
       }
     },
-    "databaseEdition": {
-      "type": "string",
-      "metadata": {
-        "description": "The edition of the SQL Database"
-      }
-    },
-    "databaseServiceObjectiveName": {
+    "elasticPoolName": {
+		"type": "string",
+		"metadata": {
+			"description": "The Elastic Pool name."
+		}
+	},
+	"edition": {
+		"type": "string",
+		"defaultValue": "Standard",
+		"allowedValues": [
+			"Basic",
+			"Standard",
+			"Premium"
+		],
+		"metadata": {
+			"description": "The Elastic Pool edition."
+		}
+	},
+	"poolDtu": {
+		"type": "int",
+		"metadata": {
+			"description": "The Elastic Pool DTU."
+		}
+	},
+	"databaseDtuMin": {
+		"type": "int",
+		"defaultValue": 0,
+		"metadata": {
+			"description": "The Elastic Pool database DTU min."
+		}
+	},
+	"databaseDtuMax": {
+		"type": "int",
+		"metadata": {
+			"description": "The Elastic Pool database DTU max."
+		}
+	},
+	"databaseServiceObjectiveName": {
       "type": "string",
       "metadata": {
         "description": "The name of the ServiceObjective"
@@ -63,65 +94,79 @@
           "administratorLoginPassword": "[parameters('sqlAdministratorLoginPassword')]",
           "version": "12.0"
         },
-        "resources": [
-          {
-            "name": "[parameters('databaseName')]",
-            "type": "databases",
-            "apiVersion": "2015-01-01",
-            "location": "[parameters('Region')]",
-            "tags": {
-              "displayName": "Database"
-            },
-            "properties": {
-              "edition": "[parameters('databaseEdition')]",
-              "collation": "[variables('databaseCollation')]",
-              "requestedServiceObjectiveName": "[parameters('databaseServiceObjectiveName')]"
-            },
-            "dependsOn": [
-              "[parameters('sqlServerName')]"
-            ],
-            "resources": [
-              {
-                "comments": "Transparent Data Encryption",
-                "name": "current",
-                "type": "transparentDataEncryption",
-                "apiVersion": "2014-04-01-preview",
-                "properties": {
-                  "status": "[variables('transparentDataEncryption')]"
-                },
-                "dependsOn": [
-                  "[parameters('databaseName')]"
-                ]
-              }
-            ]
-          },
-          {
-            "name": "AllowAllMicrosoftAzureIps",
-            "type": "firewallrules",
-            "apiVersion": "2014-04-01",
-            "location": "[parameters('Region')]",
-            "properties": {
-              "endIpAddress": "0.0.0.0",
-              "startIpAddress": "0.0.0.0"
-            },
-            "dependsOn": [
-              "[parameters('sqlServerName')]"
-            ]
-          },
-          {
-            "name": "AllowIlbAseWebAppOutboundIP",
-            "type": "firewallrules",
-            "apiVersion": "2014-04-01",
-            "location": "[parameters('Region')]",
-            "properties": {
-              "endIpAddress": "0.0.0.0",
-              "startIpAddress": "0.0.0.0"
-            },
-            "dependsOn": [
-              "[parameters('sqlServerName')]"
-            ]
-          }
-        ]
-      }
+	  },
+	  {
+		"name": "[concat(parameters('serverName'), '/', parameters('elasticPoolName'))]",
+		"type": "Microsoft.Sql/servers/elasticPools"
+		"apiVersion": "2017-10-01-preview",
+		"location": "[resourceGroup().location]",
+		"tags": {
+          "displayName": "Sql Elastic Pool"
+        },
+        "dependsOn": [
+			"[concat('Microsoft.Sql/servers/', parameters('serverName'))]"
+		],
+		"properties": {
+			"edition": "PremiumRS",
+			"dtu": "[parameters('poolDtu')]",
+			"databaseDtuMin": "[parameters('databaseDtuMin')]",
+			"databaseDtuMax": "[parameters('databaseDtuMax')]"
+		},
+	  },
+	  {
+		"name": "[concat(parameters('serverName'), '/', parameters('databasesNames')[copyIndex()])]",
+		"type": "Microsoft.Sql/servers/databases",
+		"apiVersion": "2014-04-01",
+		"location": "[resourceGroup().location]",
+		"apiVersion": "2014-04-01-preview",
+		"tags": {
+          "displayName": "Sql Database"
+        },
+        "dependsOn": [
+			"[concat('Microsoft.Sql/servers/', parameters('serverName'))]",
+			"[concat('Microsoft.Sql/servers/', parameters('serverName') ,'/elasticpools/', parameters('elasticPoolName'))]"
+		],
+		"properties": {
+			"collation": "[parameters('databaseCollation')]",
+			"requestedServiceObjectiveName": "ElasticPool",
+			"elasticPoolName": "[parameters('elasticPoolName')]"
+		},
+		"copy": {
+			"name": "addDatabasesInElasticPool",
+			"count": "[length(parameters('databasesNames'))]"
+		}
+	  },
+	  {
+		"name": "[concat(parameters('serverName'), '/', 'AllowAllWindowsAzureIps')]",
+		"type": "Microsoft.Sql/servers/firewallrules"
+		"apiVersion": "2014-04-01",
+		"location": "[resourceGroup().location]",
+		"tags": {
+          "displayName": "Sql Firewall Rules"
+        },
+        "dependsOn": [
+			"[concat('Microsoft.Sql/servers/', parameters('serverName'))]"
+		],
+		"properties": {
+			"endIpAddress": "0.0.0.0",
+			"startIpAddress": "0.0.0.0"
+		},
+	  },
+	  {
+		"name": "[concat(parameters('serverName'), '/', 'AllowIlbAseWebAppOutboundIP')]",
+		"type": "Microsoft.Sql/servers/firewallrules"
+		"apiVersion": "2014-04-01",
+		"location": "[resourceGroup().location]",
+		"tags": {
+          "displayName": "Sql Firewall Rules"
+        },
+        "dependsOn": [
+			"[concat('Microsoft.Sql/servers/', parameters('serverName'))]"
+		],
+		"properties": {
+			"endIpAddress": "0.0.0.0",
+			"startIpAddress": "0.0.0.0"
+		},
+	  }
     ]
   }
