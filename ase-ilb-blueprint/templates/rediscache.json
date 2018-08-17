@@ -11,12 +11,6 @@
     "Region": {
       "type": "string"
     },
-    "redisCacheCapacity": {
-      "type": "int",
-      "metadata": {
-        "description": "The size of the new Azure Redis Cache instance. Valid family and capacity combinations are (C0..C6, P1..P4)."
-      }
-    },
     "virtualNetwork": {
       "type": "string",
       "metadata": {
