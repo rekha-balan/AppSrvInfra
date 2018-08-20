@@ -4,134 +4,65 @@
   "parameters": {
     "SystemPrefixName": {
       "type": "string",
-      "defaultValue": "PaaSBluePrint",
+      "defaultValue": "fsdi-appsrvinfra-test",
       "metadata": {
         "description": "String to append to all resource names"
       }
     },
     "Region": {
       "type": "string",
-      "defaultValue": "West US",
+      "defaultValue": "Central US",
       "metadata": {
         "description": "Region for the deployment"
       }
     },
-    "vnetAddressPrefix": {
+    "vnetAddressSpace": {
       "type": "string",
-      "defaultValue": "10.0.0.0",
+      "defaultValue": "10.12.212.0/24",
       "metadata": {
-        "description": "IP Address Of Virtual Network Without CIDR"
+        "description": "IP Address Of Virtual Network With CIDR"
       }
     },
-    "vnetAddressPrefixCIDR": {
-      "type": "int",
-      "defaultValue": 16,
-      "maxValue": 28,
-      "metadata": {
-        "description": "Virtual Network CIDR Block"
-      }
-    },
-    "WAFSubnetPrefix": {
+    "WAFSubnetAddressSpace": {
       "type": "string",
-      "defaultValue": "10.0.0.0",
+      "defaultValue": "10.12.212.224/27",
       "metadata": {
-        "description": "WAF Subnet IP Address Without CIDR Block"
+        "description": "WAF Subnet IP Address With CIDR Block"
       }
     },
-    "WAFSubnetPrefixCIDR": {
-      "type": "int",
-      "defaultValue": 24,
-      "maxValue": 28,
+    "WebAppSubnetAddressSpace": {
+      "type": "string",
+      "defaultValue": "10.12.213.0/26",
       "metadata": {
-        "description": "WAF Subnet CIDR Block"
+        "description": "Web App Subnet IP Address With CIDR Block"
+      }
+    },
+    "BackendSubnetAddressSpace": {
+      "type": "string",
+     "defaultValue": "10.12.212.128/26",
+      "metadata": {
+        "description": "Backend VM Subnet IP Address With CIDR Block"
       }
     },
     "WebAppSubnetPrefix": {
       "type": "string",
-      "defaultValue": "10.0.1.0",
+      "defaultValue": "10.12.213.0",
       "metadata": {
-        "description": "Web App Subnet IP Address Without CIDR Block"
-      }
-    },
-    "WebAppSubnetPrefixCIDR": {
-      "type": "int",
-      "defaultValue": 24,
-      "maxValue": 28,
-      "metadata": {
-        "description": "Web App Subnet CIDR Block"
-      }
-    },
-    "RedisCacheSubnetPrefix": {
-      "type": "string",
-      "defaultValue": "10.0.3.0",
-      "metadata": {
-        "description": "Redis Cache Subnet IP Address Without CIDR Block"
-      }
-    },
-    "RedisCacheSubnetPrefixCIDR": {
-      "type": "int",
-      "defaultValue": 24,
-      "maxValue": 32,
-      "metadata": {
-        "description": "Redis Cache Subnet CIDR Block"
-      }
-    },
-    "redisShardCount": {
-      "defaultValue": 2,
-      "type": "int",
-      "metadata": {
-        "description": "Number of highly available shards to create in the cluster. Requires Premium SKU. Set to 0 to not set up clustering."
-      }
-    },
-    "redisCacheCapacity": {
-      "type": "int",
-      "allowedValues": [
-        1,
-        2,
-        3,
-        4
-      ],
-      "defaultValue": 1,
-      "metadata": {
-        "description": "The size of the new Azure Redis Cache instance. Valid family and capacity combinations are (C0..C6, P1..P4)."
-      }
-    },
-    "appServicePlanNameWeb": {
-      "type": "string",
-      "metadata": {
-        "description": "The name of the App Service plan to use for hosting the web app."
+       "description": "Web App Subnet IP Address With CIDR Block"
       }
     },
     "WebDNS": {
       "type": "string",
-      "defaultValue": "Web.demo",
+      "defaultValue": "cargill-fms.com",
       "metadata": {
         "description": "Set this to the root domain associated with the Web App."
       }
     },
     "internalLoadBalancingMode": {
       "type": "int",
+      "defaultValue": 3,
       "metadata": {
         "description": "0 = public VIP only, 1 = only ports 80/443 are mapped to ILB VIP, 2 = only FTP ports are mapped to ILB VIP, 3 = both ports 80/443 and FTP ports are mapped to an ILB VIP."
-      }
-    },
-    "pricingTier": {
-      "type": "string",
-      "allowedValues": [
-        "1",
-        "2",
-        "3"
-      ],
-      "defaultValue": "1",
-      "metadata": {
-        "description": "Defines pricing tier for workers: 1 = Isolated 1, 2 = Isolated 2, 3 = Isolated 3."
-      }
-    },
-    "capacity": {
-      "type": "int",
-      "defaultValue": 1,
-      "metadata": {
-        "description": "Defines the number of instances that will be allocated to the app service plan."
       }
     },
     "applicationGatewaySize": {
@@ -148,6 +79,7 @@
     },
     "wafEnabled": {
       "type": "bool",
+    "defaultValue": true,
       "metadata": {
         "description": "WAF Enabled"
       }
@@ -166,43 +98,9 @@
         9,
         10
       ],
-      "defaultValue": 2,
+      "defaultValue": 3,
       "metadata": {
         "description": "Number of WAF Instances"
-      }
-    },
-    "databaseServiceObjectiveName": {
-      "type": "string",
-      "defaultValue": "Basic",
-      "allowedValues": [
-        "Basic",
-        "S0",
-        "S1",
-        "S2",
-        "S3",
-        "P1",
-        "P2",
-        "P3"
-      ],
-      "metadata": {
-        "description": "The name of the configured Service Level Objective of the Azure SQL database. This is the Service Level Objective that is in the process of being applied to the Azure SQL database."
-      }
-    },
-    "databaseEdition": {
-      "type": "string",
-      "defaultValue": "Basic",
-      "allowedValues": [
-        "Web",
-        "Business",
-        "Basic",
-        "Standard",
-        "Premium",
-        "Free",
-        "Stretch",
-        "DataWarehouse"
-      ],
-      "metadata": {
-        "description": "The edition of the Azure SQL database. The DatabaseEditions enumeration contains all the valid editions."
       }
     },
     "sqlAdministratorLogin": {
@@ -215,47 +113,50 @@
       "type": "securestring",
       "metadata": {
         "description": "The administrator password of the SQL Server."
+     }
+    },
+    "poolDtu": {
+      "type": "string",
+      "defaultValue": 250,
+      "metadata": {
+        "description": "The eDTU value of the entire elastic pool."
+      }
+    },
+    "databaseDtuMax": {
+      "type": "string",
+      "defaultValue": "125",
+      "metadata": {
+        "description": "The eDTU value of and database within the elastic pool."
       }
     }
   },
   "variables": {
-    "vnetName": "[toLower(concat(parameters('SystemPrefixName'),'vNet',uniqueString(resourceGroup().id)))]",
-    "WafSubnetName": "[toLower(concat(parameters('SystemPrefixName'),'WafSubnet'))]",
-    "WebAppSubnetName": "[toLower(concat(parameters('SystemPrefixName'),'WebAppSubnet'))]",
-    "RedisCacheSubnetName": "[toLower(concat(parameters('SystemPrefixName'),'RedisSubnet'))]",
-    "redisCacheName": "[toLower(concat(parameters('SystemPrefixName'),'RedisCache',uniqueString(resourceGroup().id)))]",
-    "aseWebName": "[toLower(concat(parameters('SystemPrefixName'),'AseWeb',uniqueString(resourceGroup().id)))]",
-    "WebAppName": "[toLower(concat(parameters('SystemPrefixName'),'WebApp',uniqueString(resourceGroup().id)))]",
-    "applicationGatewayName": "[toLower(concat(parameters('SystemPrefixName'),'WAF',uniqueString(resourceGroup().id)))]",
-    "sqlServerName": "[toLower(concat(parameters('SystemPrefixName'),'AzureSql',uniqueString(resourceGroup().id)))]",
-    "databaseName": "[toLower(concat(parameters('SystemPrefixName'),'Database'))]",
-    "TemplateURIs": "https://raw.githubusercontent.com/mayurshintre/Blueprints-PaaS-ASE/master/ase-ilb-blueprint/templates/",
+    "vnetName": "[toLower(concat(parameters('SystemPrefixName'),'-vnet'))]",
+    "WafSubnetName": "[toLower(concat(parameters('SystemPrefixName'),'-agw-snet'))]",
+    "WebAppSubnetName": "[toLower(concat(parameters('SystemPrefixName'),'-ase-snet'))]",
+    "BackendSubnetName": "[toLower(concat(parameters('SystemPrefixName'),'-be-snet'))]",
+    "aseWebName": "[toLower(concat(parameters('SystemPrefixName'),'-ase'))]",
+    "applicationGatewayName": "[toLower(concat(parameters('SystemPrefixName'),'-agw'))]",
+    "sqlServerName": "[toLower(concat(parameters('SystemPrefixName'),'-sqlsrv'))]",
+    "databaseName": "[toLower(concat(parameters('SystemPrefixName'),'-db'))]",
+    "elasticPoolName": "[toLower(concat(parameters('SystemPrefixName'),'-ep'))]",
+  
+    "TemplateURIs": "https://raw.githubusercontent.com/mtrgoose/AppSrvInfra/master/ase-ilb-blueprint/templates/",
     "_StorageTemplateURIs": "https://<yourstorage>.blob.core.windows.net/arm/blueprint/",
+    
+    "elasticPooledition": "PremiumRS",
+    
     "wafMode": "Prevention",
     "wafRuleSetType": "OWASP",
     "wafRuleSetVersion": "3.0",
 
-    "VaultName": "[concat('ILBaseVault',uniqueString(resourceGroup().id))]",
+    "VaultName": "[concat(parameters('SystemPrefixName'),'-kv')]",
     "VaultSKU": "Premium",
+  
+    "appServicePlanNameWeb": "[concat(parameters('SystemPrefixName'),'-asp')]",
 
-    "vnetAddressSpace": "[concat(parameters('vnetAddressPrefix'), '/', parameters('vnetAddressPrefixCIDR'))]",
-    "WAFSubnetAddressSpace": "[concat(parameters('WAFSubnetPrefix'), '/', parameters('WAFSubnetPrefixCIDR'))]",
-    "WebAppSubnetAddressSpace": "[concat(parameters('WebAppSubnetPrefix'), '/', parameters('WebAppSubnetPrefixCIDR'))]",
-    "RedisCacheSubnetAddressSpace": "[concat(parameters('RedisCacheSubnetPrefix'), '/', parameters('RedisCacheSubnetPrefixCIDR'))]",
     "VnetID": "[concat(resourceId('Microsoft.Network/VirtualNetworks', variables('vnetName')))]",
-    "SubNetID": "[concat(variables('VnetID'), '/subnets/')]",
-
-    "redisCachemaxclients": 7500,
-    "redisCachemaxmemoryreserved": 200,
-    "redisCachemaxfragmentationmemory-reserved": 300,
-    "redisCachemaxmemory-delta": 200,
-
-    "RedisCacheSplit": "[split(parameters('RedisCacheSubnetPrefix'),'.')]",
-    "RedisCacheConvert": "[int(variables('RedisCacheSplit')[3])]",
-    "RedisCacheAdd": "[add(variables('RedisCacheConvert'),4)]",
-    "RedisCacheLastOctet": "[string(variables('RedisCacheAdd'))]",
-    "RedisCacheStaticIP": "[concat(variables('RedisCacheSplit')[0],'.',variables('RedisCacheSplit')[1],'.',variables('RedisCacheSplit')[2],'.',variables('RedisCacheLastOctet'))]",
-
+    
     "WAFBackEndPoolSplit": "[split(parameters('WebAppSubnetPrefix'),'.')]",
     "WAFBackEndPoolConvert": "[int(variables('WAFBackEndPoolSplit')[3])]",
     "WAFBackEndPoolAdd": "[add(variables('WAFBackEndPoolConvert'),4)]",
@@ -267,7 +168,7 @@
   "resources": [
     {
       "type": "Microsoft.Resources/deployments",
-      "name": "KeyVault",
+      "name": "[variables('VaultName')]",
       "apiVersion": "2015-01-01",
       "properties": {
         "mode": "Incremental",
@@ -286,40 +187,59 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "name": "Vnet",
+      "name": "[variables('vnetName')]",
       "apiVersion": "2015-01-01",
       "properties": {
         "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(variables('TemplateURIs'),'newvnetazuredns.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "vnetName": { "value": "[variables('vnetName')]" },
-          "Region": { "value": "[parameters('Region')]" },
-          "vnetAddressSpace": { "value": "[variables('vnetAddressSpace')]" },
-          "vnetAddressPrefix": { "value": "[parameters('vnetAddressPrefix')]" },
-          "vnetAddressPrefixCIDR": { "value": "[parameters('vnetAddressPrefixCIDR')]" },
-          "WAFSubnetAddressSpace": { "value": "[variables('WAFSubnetAddressSpace')]" },
-          "WAFSubnetName": { "value": "[variables('WAFSubnetName')]" },
-          "WAFSubnetPrefixCIDR": { "value": "[parameters('WAFSubnetPrefixCIDR')]" },
-          "WAFSubnetPrefix": { "value": "[parameters('WAFSubnetPrefix')]" },
-          "WebAppSubnetAddressSpace": { "value": "[variables('WebAppSubnetAddressSpace')]" },
-          "WebAppSubnetName": { "value": "[variables('WebAppSubnetName')]" },
-          "WebAppSubnetPrefix": { "value": "[parameters('WebAppSubnetPrefix')]" },
-          "WebAppSubnetPrefixCIDR": { "value": "[parameters('WebAppSubnetPrefixCIDR')]" },
-          "RedisCacheSubnetAddressSpace": { "value": "[variables('RedisCacheSubnetAddressSpace')]" },
-          "RedisCacheSubnetName": { "value": "[variables('RedisCacheSubnetName')]" },
-          "RedisCacheSubnetPrefix": { "value": "[parameters('RedisCacheSubnetPrefix')]" },
-          "RedisCacheSubnetPrefixCIDR": { "value": "[parameters('RedisCacheSubnetPrefixCIDR')]" }
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "variables": {
+            "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]"
+          },
+          "resources": [
+            {
+              "apiVersion": "2016-03-30",
+              "type": "Microsoft.Network/virtualNetworks",
+              "name": "[variables('vnetName')]",
+              "location": "[parameters('Region')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "[parameters('vnetAddressSpace')]"
+                  ]
+                },
+                "subnets": [
+                  {
+                    "name": "[variables('WAFSubnetName')]",
+                    "properties": {
+                      "addressPrefix": "[parameters('WAFSubnetAddressSpace')]"
+                    }
+                  },
+                  {
+                    "name": "[variables('WebAppSubnetName')]",
+                    "properties": {
+                      "addressPrefix": "[parameters('WebAppSubnetAddressSpace')]"
+                    }
+                  },
+                  {
+                    "name": "[variables('BackendSubnetName')]",
+                    "properties": {
+                      "addressPrefix": "[parameters('BackendSubnetAddressSpace')]"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         }
       }
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "name": "AseWeb",
+      "name": "[variables('aseWebName')]",
       "apiVersion": "2016-09-01",
-      "dependsOn": [ "Vnet" ],
+      "dependsOn": ["[variables('vnetName')]"],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -338,9 +258,9 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "name": "AspWeb",
+      "name": "[variables('appServicePlanNameWeb')]",
       "apiVersion": "2016-09-01",
-      "dependsOn": [ "AseWeb" ],
+      "dependsOn": ["[variables('aseWebName')]"],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -348,64 +268,17 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
-          "appServicePlanName": { "value": "[parameters('appServicePlanNameWeb')]" },
+          "appServicePlanName": { "value": "[variables('appServicePlanNameWeb')]" },
           "aseName": { "value": "[variables('aseWebName')]" },
-          "Region": { "value": "[parameters('Region')]" }          
+          "Region": { "value": "[parameters('Region')]" }
         }
       }
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "name": "RedisCachePremium",
-      "apiVersion": "2016-09-01",
-      "dependsOn": [ "Vnet" ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(variables('TemplateURIs'),'rediscache.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "redisCacheName": { "value": "[variables('redisCacheName')]" },
-          "Region": { "value": "[parameters('Region')]" },
-          "redisShardCount": { "value": "[parameters('redisShardCount')]" },
-          "redisCacheCapacity": { "value": "[parameters('redisCacheCapacity')]" },
-          "virtualNetwork": { "value": "[variables('VnetID')]" },
-          "subnet": { "value": "[variables('RedisCacheSubnetName')]" },
-          "redisCacheStaticIP": { "value": "[variables('redisCacheStaticIP')]" },
-          "redisCachemaxclients": { "value": "[variables('redisCachemaxclients')]" },
-          "redisCachemaxmemoryreserved": { "value": "[variables('redisCachemaxmemoryreserved')]" },
-          "redisCachemaxfragmentationmemory-reserved": { "value": "[variables('redisCachemaxfragmentationmemory-reserved')]" },
-          "redisCachemaxmemory-delta": { "value": "[variables('redisCachemaxmemory-delta')]" }
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Resources/deployments",
-      "name": "WebApp",
-      "apiVersion": "2016-09-01",
-      "dependsOn": [ "AspWeb" ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(variables('TemplateURIs'),'ilbasewebapp.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "WebAppName": { "value": "[variables('WebAppName')]" },
-          "Region": { "value": "[parameters('Region')]" },
-          "appServicePlanName": { "value": "[parameters('appServicePlanNameWeb')]" },
-          "aseName": { "value": "[variables('aseWebName')]" }
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Resources/deployments",
-      "name": "WAF",
+      "name": "[variables('applicationGatewayName')]",
       "apiVersion": "2015-01-01",
-      "dependsOn": [
-        "AseWeb"
-      ],
+      "dependsOn": ["[variables('aseWebName')]"],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -416,8 +289,8 @@
           "vnetName": { "value": "[variables('vnetName')]" },
           "WAFSubnetName": { "value": "[variables('WAFSubnetName')]" },
           "Region": { "value": "[parameters('Region')]" },
-          "subnetPrefix": { "value": "[variables('WAFSubnetAddressSpace')]" },
-          "addressPrefix": { "value": "[variables('vnetAddressSpace')]" },
+          "subnetPrefix": { "value": "[parameters('WAFSubnetAddressSpace')]" },
+          "addressPrefix": { "value": "[parameters('vnetAddressSpace')]" },
           "applicationGatewayName": { "value": "[variables('applicationGatewayName')]" },
           "applicationGatewaySize": { "value": "[parameters('applicationGatewaySize')]" },
           "capacity": { "value": "[parameters('WafCapacity')]" },
@@ -432,8 +305,8 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "name": "SQL",
-      "apiVersion": "2015-01-01",
+      "name": "[variables('sqlServerName')]",
+      "apiVersion": "2015-01-01-preview",
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -441,13 +314,15 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
-          "Region": { "value": "[parameters('Region')]" },
           "sqlAdministratorLogin": { "value": "[parameters('sqlAdministratorLogin')]" },
           "sqlAdministratorLoginPassword": { "value": "[parameters('sqlAdministratorLoginPassword')]" },
+          "location": { "value": "[parameters('Region')]" },
           "sqlServerName": { "value": "[variables('sqlServerName')]" },
           "databaseName": { "value": "[variables('databaseName')]" },
-          "databaseEdition": { "value": "[parameters('databaseEdition')]" },
-          "databaseServiceObjectiveName": { "value": "[parameters('databaseServiceObjectiveName')]" }
+          "elasticPoolName": {"value": "[variables('elasticPoolName')]"},
+          "elasticPooledition": {"value": "[variables('elasticPooledition')]"},
+          "poolDtu": {"value": "[parameters('poolDtu')]"},
+          "databaseDtuMax": {"value": "[variables('databaseDtuMax')]"}
         }
       }
     }
@@ -470,4 +345,4 @@
       "value": "[variables('applicationGatewayName')]"
     }
   }
- }
+}
