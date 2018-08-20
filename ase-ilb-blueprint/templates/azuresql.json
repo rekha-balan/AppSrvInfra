@@ -26,7 +26,7 @@
         "description": "The SQL Server name."
       }
     },
-    "databasesNames": {
+    "databaseName": {
       "type": "array",
       "metadata": {
         "description": "The SQL Databases names."
@@ -107,7 +107,7 @@
     },
     {
       "type": "Microsoft.Sql/servers/databases",
-      "name": "[concat(parameters('sqlServerName'), '/', parameters('databasesNames')[copyIndex()])]",
+      "name": "[concat(parameters('sqlServerName'), '/', parameters('databaseName')[copyIndex()])]",
       "location": "[parameters('location')]",
       "apiVersion": "2015-01-01",
       "dependsOn": [
@@ -121,7 +121,7 @@
       },
       "copy": {
         "name": "addDatabasesInElasticPool",
-        "count": "[length(parameters('databasesNames'))]"
+        "count": "[length(parameters('databaseName'))]"
       }
     },
     {
