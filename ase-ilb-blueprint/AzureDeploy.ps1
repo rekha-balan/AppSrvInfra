@@ -1,348 +1,346 @@
-{
-  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "SystemPrefixName": {
-      "type": "string",
-      "defaultValue": "fsdi-appsrvinfra-test",
-      "metadata": {
-        "description": "String to append to all resource names"
-      }
-    },
-    "Region": {
-      "type": "string",
-      "defaultValue": "Central US",
-      "metadata": {
-        "description": "Region for the deployment"
-      }
-    },
-    "vnetAddressSpace": {
-      "type": "string",
-      "defaultValue": "10.12.212.0/24",
-      "metadata": {
-        "description": "IP Address Of Virtual Network With CIDR"
-      }
-    },
-    "WAFSubnetAddressSpace": {
-      "type": "string",
-      "defaultValue": "10.12.212.224/27",
-      "metadata": {
-        "description": "WAF Subnet IP Address With CIDR Block"
-      }
-    },
-    "WebAppSubnetAddressSpace": {
-      "type": "string",
-      "defaultValue": "10.12.213.0/26",
-      "metadata": {
-        "description": "Web App Subnet IP Address With CIDR Block"
-      }
-    },
-    "BackendSubnetAddressSpace": {
-      "type": "string",
-     "defaultValue": "10.12.212.128/26",
-      "metadata": {
-        "description": "Backend VM Subnet IP Address With CIDR Block"
-      }
-    },
-    "WebAppSubnetPrefix": {
-      "type": "string",
-      "defaultValue": "10.12.213.0",
-      "metadata": {
-       "description": "Web App Subnet IP Address With CIDR Block"
-      }
-    },
-    "WebDNS": {
-      "type": "string",
-      "defaultValue": "cargill-fms.com",
-      "metadata": {
-        "description": "Set this to the root domain associated with the Web App."
-      }
-    },
-    "internalLoadBalancingMode": {
-      "type": "int",
-      "defaultValue": 3,
-      "metadata": {
-        "description": "0 = public VIP only, 1 = only ports 80/443 are mapped to ILB VIP, 2 = only FTP ports are mapped to ILB VIP, 3 = both ports 80/443 and FTP ports are mapped to an ILB VIP."
-      }
-    },
-    "applicationGatewaySize": {
-      "type": "string",
-      "allowedValues": [
-        "WAF_Small",
-        "WAF_Medium",
-        "WAF_Large"
-      ],
-      "defaultValue": "WAF_Medium",
-      "metadata": {
-        "description": "WAF Appliaction Gateway Size"
-      }
-    },
-    "wafEnabled": {
-      "type": "bool",
-    "defaultValue": true,
-      "metadata": {
-        "description": "WAF Enabled"
-      }
-    },
-    "WafCapacity": {
-      "type": "int",
-      "allowedValues": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10
-      ],
-      "defaultValue": 3,
-      "metadata": {
-        "description": "Number of WAF Instances"
-      }
-    },
-    "sqlAdministratorLogin": {
-      "type": "string",
-      "metadata": {
-        "description": "The administrator username of the SQL Server."
-      }
-    },
-    "sqlAdministratorLoginPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "The administrator password of the SQL Server."
-     }
-    },
-    "poolDtu": {
-      "type": "string",
-      "defaultValue": 250,
-      "metadata": {
-        "description": "The eDTU value of the entire elastic pool."
-      }
-    },
-    "databaseDtuMax": {
-      "type": "string",
-      "defaultValue": "125",
-      "metadata": {
-        "description": "The eDTU value of and database within the elastic pool."
-      }
-    }
-  },
-  "variables": {
-    "vnetName": "[toLower(concat(parameters('SystemPrefixName'),'-vnet'))]",
-    "WafSubnetName": "[toLower(concat(parameters('SystemPrefixName'),'-agw-snet'))]",
-    "WebAppSubnetName": "[toLower(concat(parameters('SystemPrefixName'),'-ase-snet'))]",
-    "BackendSubnetName": "[toLower(concat(parameters('SystemPrefixName'),'-be-snet'))]",
-    "aseWebName": "[toLower(concat(parameters('SystemPrefixName'),'-ase'))]",
-    "applicationGatewayName": "[toLower(concat(parameters('SystemPrefixName'),'-agw'))]",
-    "sqlServerName": "[toLower(concat(parameters('SystemPrefixName'),'-sqlsrv'))]",
-    "databaseName": "[toLower(concat(parameters('SystemPrefixName'),'-db'))]",
-    "elasticPoolName": "[toLower(concat(parameters('SystemPrefixName'),'-ep'))]",
-  
-    "TemplateURIs": "https://raw.githubusercontent.com/mtrgoose/AppSrvInfra/master/ase-ilb-blueprint/templates/",
-    "_StorageTemplateURIs": "https://<yourstorage>.blob.core.windows.net/arm/blueprint/",
-    
-    "elasticPooledition": "PremiumRS",
-    
-    "wafMode": "Prevention",
-    "wafRuleSetType": "OWASP",
-    "wafRuleSetVersion": "3.0",
+<#
+.Synopsis
+   Deployment of the App Service Infrastructure
+.DESCRIPTION
+   One script to rule them all.  This is the script that deploys the AppSrvInfra.  It deploys multiple templates and sets the variables for these templates.
+.EXAMPLE
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
+.INPUTS
+   Inputs to this cmdlet (if any)
+.OUTPUTS
+   Output from this cmdlet (if any)
+.NOTES
+   Version
+   v1.0		2 Aug 2018		Craig Franzen		original script
+   
+   This script is based on this 
+.COMPONENT
+   The component this cmdlet belongs to
+.ROLE
+   The role this cmdlet belongs to
+.FUNCTIONALITY
+   The functionality that best describes this cmdlet
+#>
 
-    "VaultName": "[concat(parameters('SystemPrefixName'),'-kv')]",
-    "VaultSKU": "Premium",
-  
-    "appServicePlanNameWeb": "[concat(parameters('SystemPrefixName'),'-asp')]",
+param (
+	[Parameter(Mandatory=$false)]
+    [string]$AppName,
+	[Parameter(Mandatory=$true)]
+	[ValidateSet("Dev","Stage","Prod")]
+    [string]$Environment,
+	[Parameter(Mandatory=$false)]
+    [string]$Region = "Central US",
+    [Parameter(Mandatory=$true)]
+    [string]$vnetAddressPrefix,
+    [Parameter(Mandatory=$false)]
+    [string]$TemplateFile,
+	[Parameter(Mandatory=$false)]
+    [string]$TemplateParameterFile,
+	[Parameter(Mandatory=$false)]
+    [string]$TemplateUri,
+	[Parameter(Mandatory=$false)]
+    [string]$TemplateParameterUri,
+	[Parameter(Mandatory=$false)]
+    [ValidateSet("VSTS","Manual")]
+	[string]$Deployment = "Manual"
+)
 
-    "VnetID": "[concat(resourceId('Microsoft.Network/VirtualNetworks', variables('vnetName')))]",
-    
-    "WAFBackEndPoolSplit": "[split(parameters('WebAppSubnetPrefix'),'.')]",
-    "WAFBackEndPoolConvert": "[int(variables('WAFBackEndPoolSplit')[3])]",
-    "WAFBackEndPoolAdd": "[add(variables('WAFBackEndPoolConvert'),4)]",
-    "WAFBackEndPoolLastOctet": "[string(variables('WAFBackEndPoolAdd'))]",
-    "WAFBackEndPoolStaticIP1": "[concat(variables('WAFBackEndPoolSplit')[0],'.',variables('WAFBackEndPoolSplit')[1],'.',variables('WAFBackEndPoolSplit')[2],'.',variables('WAFBackEndPoolLastOctet'))]",
+$RGName = $AppName + "-" + $Environment + "-rg"		
+$DeploymentName = $AppName + "-" +  $Environment + "-Deployment"
+$SystemPrefixName = $AppName + "-" + $Environment
 
-    "Secretname": "SqlSecret"
-  },
-  "resources": [
-    {
-      "type": "Microsoft.Resources/deployments",
-      "name": "[variables('VaultName')]",
-      "apiVersion": "2015-01-01",
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(variables('TemplateURIs'),'keyvault.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "VaultName": { "value": "[variables('VaultName')]" },
-          "Region": { "value": "[parameters('Region')]" },
-          "VaultSku": { "value": "[variables('VaultSKU')]" },
-          "SecretName": { "value": "[variables('SecretName')]" },
-          "SecretValue": { "value": "[parameters('sqlAdministratorLoginPassword')]" }
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Resources/deployments",
-      "name": "[variables('vnetName')]",
-      "apiVersion": "2015-01-01",
-      "properties": {
-        "mode": "Incremental",
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "variables": {
-            "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]"
-          },
-          "resources": [
-            {
-              "apiVersion": "2016-03-30",
-              "type": "Microsoft.Network/virtualNetworks",
-              "name": "[variables('vnetName')]",
-              "location": "[parameters('Region')]",
-              "properties": {
-                "addressSpace": {
-                  "addressPrefixes": [
-                    "[parameters('vnetAddressSpace')]"
-                  ]
-                },
-                "subnets": [
-                  {
-                    "name": "[variables('WAFSubnetName')]",
-                    "properties": {
-                      "addressPrefix": "[parameters('WAFSubnetAddressSpace')]"
-                    }
-                  },
-                  {
-                    "name": "[variables('WebAppSubnetName')]",
-                    "properties": {
-                      "addressPrefix": "[parameters('WebAppSubnetAddressSpace')]"
-                    }
-                  },
-                  {
-                    "name": "[variables('BackendSubnetName')]",
-                    "properties": {
-                      "addressPrefix": "[parameters('BackendSubnetAddressSpace')]"
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Resources/deployments",
-      "name": "[variables('aseWebName')]",
-      "apiVersion": "2016-09-01",
-      "dependsOn": ["[variables('vnetName')]"],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(variables('TemplateURIs'),'ilbase.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "aseName": { "value": "[variables('aseWebName')]" },
-          "Region": { "value": "[parameters('Region')]" },
-          "vnetID": { "value": "[variables('vnetID')]" },
-          "SubnetName": { "value": "[variables('WebAppSubnetName')]" },
-          "internalLoadBalancingMode": { "value": "[parameters('internalLoadBalancingMode')]" },
-          "DNS": { "value": "[parameters('WebDNS')]" }
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Resources/deployments",
-      "name": "[variables('appServicePlanNameWeb')]",
-      "apiVersion": "2016-09-01",
-      "dependsOn": ["[variables('aseWebName')]"],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(variables('TemplateURIs'),'ilbaseasp.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "appServicePlanName": { "value": "[variables('appServicePlanNameWeb')]" },
-          "aseName": { "value": "[variables('aseWebName')]" },
-          "Region": { "value": "[parameters('Region')]" }
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Resources/deployments",
-      "name": "[variables('applicationGatewayName')]",
-      "apiVersion": "2015-01-01",
-      "dependsOn": ["[variables('aseWebName')]"],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(variables('TemplateURIs'),'waf.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "vnetName": { "value": "[variables('vnetName')]" },
-          "WAFSubnetName": { "value": "[variables('WAFSubnetName')]" },
-          "Region": { "value": "[parameters('Region')]" },
-          "subnetPrefix": { "value": "[parameters('WAFSubnetAddressSpace')]" },
-          "addressPrefix": { "value": "[parameters('vnetAddressSpace')]" },
-          "applicationGatewayName": { "value": "[variables('applicationGatewayName')]" },
-          "applicationGatewaySize": { "value": "[parameters('applicationGatewaySize')]" },
-          "capacity": { "value": "[parameters('WafCapacity')]" },
-          "wafMode": { "value": "[variables('wafMode')]" },
-          "wafRuleSetType": { "value": "[variables('wafRuleSetType')]" },
-          "wafRuleSetVersion": { "value": "[variables('wafRuleSetVersion')]" },
-          "backendIpAddress1": { "value": "[variables('WAFBackEndPoolStaticIP1')]" },
-          "wafEnabled": { "value": "[parameters('wafEnabled')]" },
-          "webAppDNS": { "value": "[parameters('WebDNS')]" }
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Resources/deployments",
-      "name": "[variables('sqlServerName')]",
-      "apiVersion": "2015-01-01-preview",
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(variables('TemplateURIs'),'azuresql.json')]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "sqlAdministratorLogin": { "value": "[parameters('sqlAdministratorLogin')]" },
-          "sqlAdministratorLoginPassword": { "value": "[parameters('sqlAdministratorLoginPassword')]" },
-          "location": { "value": "[parameters('Region')]" },
-          "sqlServerName": { "value": "[variables('sqlServerName')]" },
-          "databaseName": { "value": "[variables('databaseName')]" },
-          "elasticPoolName": {"value": "[variables('elasticPoolName')]"},
-          "elasticPooledition": {"value": "[variables('elasticPooledition')]"},
-          "poolDtu": {"value": "[parameters('poolDtu')]"},
-          "databaseDtuMax": {"value": "[variables('databaseDtuMax')]"}
-        }
-      }
-    }
-  ],
-  "outputs": {
-    "AseWebName": {
-      "type": "string",
-      "value": "[variables('aseWebName')]"
-    },
-    "VnetName": {
-      "type": "string",
-      "value": "[variables('vnetName')]"
-    },
-    "SqlName": {
-      "type": "string",
-      "value": "[variables('sqlServerName')]"
-    },
-    "AppGWName": {
-      "type": "string",
-      "value": "[variables('applicationGatewayName')]"
-    }
-  }
+$vnetAddressSpace = $vnetAddressPrefix + '/24'
+$WAFSubnetAddressSpace = $vnetAddressPrefix.replace('.0','.224') + '/27'
+$WebAppSubnetAddressSpace = $vnetAddressPrefix+ '/26'
+$BackendSubnetAddressSpace = $vnetAddressPrefix.replace('.0','.128') + '/26'
+
+##Catch to verify AzureRM session is active.  Forces sign-in if no session is found
+#region
+if ($Deployment -eq "Manual") {
+	Write-Host "=> Signing into Azure RM." -ForegroundColor Yellow
+    Write-Host "=>" -ForegroundColor Yellow
+    do {
+        $azureAccess = $true
+	    Try {
+		    Get-AzureRmSubscription -ErrorAction Stop | Out-Null
+    	}
+	    Catch {
+			Write-Host "=> Wow, you got kicked out...." -ForegroundColor Yellow
+			Write-Host "=> I have connections!  Lets get you back in....." -ForegroundColor Yellow
+			# Get Users email address from AD for logging into Azure
+			$strName = $env:username
+			$strFilter = "(&(objectCategory=User)(samAccountName=$strName))"
+			$objSearcher = New-Object System.DirectoryServices.DirectorySearcher
+			$objSearcher.Filter = $strFilter
+			$objPath = $objSearcher.FindOne()
+			# this can be a few different variables
+			$UserEmail = $objPath.Properties.mail
+			$continue = Read-Host "Logging you into Azure using $UserEmail.  Is this correct? (N/y)"
+			while("y","n" -notcontains $continue )
+			{
+				$continue = Read-Host "Please enter your response (N/y)"
+			}
+			Switch ($continue) 
+			{ 
+				Y {Continue} 
+				N {$UserEmail = Read-Host "Please input the username to log in with"} 
+			} 
+			$CredfileName = $UserEmail -replace "@","-" -replace "com","txt"
+			if (!(Test-Path $env:USERPROFILE\Documents\$CredfileName)) {$password = Read-Host "Unable to find password file.  Please enter your password now: " -AsSecureString } else {$password = cat $env:USERPROFILE\Documents\$CredfileName | convertto-securestring}
+			$cred = new-object -typename System.Management.Automation.PSCredential -argumentlist $CredfileName, $password
+
+			# Log into Azure
+			Write-Host "Logging into Azure with $CredfileName" -ForegroundColor Green
+			[System.Net.WebRequest]::DefaultWebProxy.Credentials = [System.Net.CredentialCache]::DefaultCredentials
+			Try {Login-AzureRmAccount -Credential $cred -ErrorAction SilentlyContinue | Out-Null}
+			Catch {$ErrorMessage = $_;Break}
+			if ($Environment -eq "Dev") {$selection = "a3750e25-9701-422d-a956-31d87d93f99e"}
+			if ($Environment -eq "Stage") {$selection = "065491a8-6f4d-422e-a4db-429003ca9f6b"}
+			if ($Environment -eq "Prod") {$selection = "065491a8-6f4d-422e-a4db-429003ca9f6b"}
+			Select-AzureRmSubscription -SubscriptionName $selection | Out-Null
+			# change window name
+			$host.ui.RawUI.WindowTitle = $DeploymentName + " Script in " + $Environment
+		}
+		Finally {
+			Write-Host "=> OK, you are all logged in and ready to go" -ForegroundColor Yellow
+			Write-Host "=>" -ForegroundColor Yellow
+		}
+    } while (! $azureAccess)
+    Write-Host "=> You are now Logged into Azure Resource Manager." -ForegroundColor Yellow
+    Write-Host "=>" -ForegroundColor Yellow
 }
+#endregion
+
+Write-Host "=> Beginning Azure Deployment Sequence for ASE App Service Infrastructure..." -ForegroundColor Yellow
+Write-Host "=> Login to ARM if you are not already." -ForegroundColor Yellow
+
+# Checking for network resource group, creating if does not exist
+#region
+Write-Host "=>" -ForegroundColor Yellow
+Write-Host "=> Time to make sure the gremlins have not eaten your Resource Group already..." -ForegroundColor Yellow
+if (!(Get-AzureRMResourceGroup -Name $RgName -ErrorAction SilentlyContinue))
+{
+    Write-Host "=>" -ForegroundColor Yellow
+    Write-Host "=> Oh No!  They ate it...." -ForegroundColor Yellow
+    Write-Host "=> I got this though... Making a new one for you!" -ForegroundColor Yellow
+    New-AzureRmResourceGroup -Name $RgName -Location $Region | Out-Null
+    Write-Host "=>" -ForegroundColor Yellow
+    Write-Host "=> Resource Group $RgName now exists!" -ForegroundColor Yellow
+}
+else
+{
+    Write-Host "=>" -ForegroundColor Yellow
+    Write-Host "=> Resource Group $RgName already exists." -ForegroundColor Yellow
+}
+#endregion
+
+##GeneratePassword
+Write-Host "=>" -ForegroundColor Yellow
+Write-Host "=> Generating password for Azure SQL" -ForegroundColor Yellow
+
+Write-Host "=>" -ForegroundColor Yellow
+Write-Host "=> Deploying the ASE Blueprint..." -ForegroundColor Yellow
+
+if ($Deployment -eq "Manual") {
+	New-AzureRMResourceGroupDeployment -Name $DeploymentName `
+		-ResourceGroupName $RgName `
+		-TemplateFile $TemplateFile `
+		-TemplateParameterFile $TemplateParameterFile `
+		-SystemPrefixName $SystemPrefixName `
+		-vnetAddressSpace $vnetAddressSpace `
+		-WAFSubnetAddressSpace $WAFSubnetAddressSpace `
+		-WebAppSubnetAddressSpace $WebAppSubnetAddressSpace `
+		-BackendSubnetAddressSpace $BackendSubnetAddressSpace `
+		-WebAppSubnetPrefix $vnetAddressPrefix `
+		-Region $Region `
+		-Mode Incremental `
+		-Verbose
+}
+
+Write-Host "=>" -ForegroundColor Yellow
+Write-Host "=> Man that was tense... Good thing we know some Kung-Fu or those fraggles might have been the end of the road..." -ForegroundColor Yellow
+
+##Get Outputs from Deployment
+Write-Host "=>" -ForegroundColor Yellow
+Write-Host "=> Retrieving outputs from deployment $DeploymentName." -ForegroundColor Yellow
+
+$VnetName = (Get-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -Name $DeploymentName).Outputs.vnetName.Value
+$SqlName = (Get-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -Name $DeploymentName).Outputs.sqlName.Value
+$AppGWName = (Get-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -Name $DeploymentName).Outputs.appGWName.Value
+
+Write-Host "=>" -ForegroundColor Yellow
+Write-Host "=> Creating Network Security Group Rules." -ForegroundColor Yellow
+##WAF Rules
+#region
+  $WAFRule1 = New-AzureRmNetworkSecurityRuleConfig -Name DenyAllInbound -Description "Deny All Inbound" `
+ -Access Deny -Protocol * -Direction Inbound -Priority 500 `
+ -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * `
+ -DestinationPortRange *
+
+  $WAFRule2 = New-AzureRmNetworkSecurityRuleConfig -Name HTTPS-In -Description "Allow Inbound HTTPS" `
+ -Access Allow -Protocol Tcp -Direction Inbound -Priority 110 `
+ -SourceAddressPrefix Internet -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange 443
+
+  $WAFRule3 = New-AzureRmNetworkSecurityRuleConfig -Name HTTP-In -Description "Allow Inbound HTTP" `
+ -Access Allow -Protocol Tcp -Direction Inbound -Priority 120 `
+ -SourceAddressPrefix Internet -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange 80
+ 
+   $WAFRule4 = New-AzureRmNetworkSecurityRuleConfig -Name DNS-In -Description "Allow Inbound DNS" `
+ -Access Allow -Protocol Tcp -Direction Inbound -Priority 130 `
+ -SourceAddressPrefix * -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange 53
+
+  $WAFRule5 = New-AzureRmNetworkSecurityRuleConfig -Name DenyAllOutbound -Description "Deny All Outbound" `
+ -Access Deny -Protocol * -Direction Outbound -Priority 500 `
+ -SourceAddressPrefix * -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange *
+
+  $WAFRule6 = New-AzureRmNetworkSecurityRuleConfig -Name HTTPS-Out -Description "Allow Outbound HTTPS" `
+ -Access Allow -Protocol Tcp -Direction Outbound -Priority 110 `
+ -SourceAddressPrefix * -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange 443
+
+  $WAFRule7 = New-AzureRmNetworkSecurityRuleConfig -Name HTTP-Out -Description "Allow Outbound HTTP" `
+ -Access Allow -Protocol Tcp -Direction Outbound -Priority 120 `
+ -SourceAddressPrefix * -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange 80
+ 
+   $WAFRule8 = New-AzureRmNetworkSecurityRuleConfig -Name DNS-Out -Description "Allow Outbound DNS" `
+ -Access Allow -Protocol Tcp -Direction Outbound -Priority 130 `
+ -SourceAddressPrefix * -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange 53
+
+ #endregion
+
+##ASE Rules
+#region
+  $ASERule1 = New-AzureRmNetworkSecurityRuleConfig -Name AllAllowInboundASEManagement -Description "Allows All Inbound ASE Management" `
+ -Access Allow -Protocol * -Direction Inbound -Priority 100 `
+ -SourceAddressPrefix * -SourcePortRange * `
+ -DestinationAddressPrefix Virtualnetwork -DestinationPortRange 454-455
+
+  $ASERule2 = New-AzureRmNetworkSecurityRuleConfig -Name AllAllowOutboundASEManagement -Description "Allow Outbound ASE Management" `
+ -Access Allow -Protocol * -Direction Outbound -Priority 100 `
+ -SourceAddressPrefix * -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange 445
+ 
+  $ASERule3 = New-AzureRmNetworkSecurityRuleConfig -Name AllAllowOutboundDNS -Description "Allow Outbound DNS" `
+ -Access Allow -Protocol Tcp -Direction Outbound -Priority 120 `
+ -SourceAddressPrefix * -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange 53
+
+   $ASERule4 = New-AzureRmNetworkSecurityRuleConfig -Name AllAllowOutboundHTTP -Description "Allow Outbound HTTP" `
+ -Access Allow -Protocol Tcp -Direction Outbound -Priority 130 `
+ -SourceAddressPrefix * -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange 80
+
+   $ASERule5 = New-AzureRmNetworkSecurityRuleConfig -Name AllAllowOutboundHTTPS -Description "Allow Outbound HTTPS" `
+ -Access Allow -Protocol Tcp -Direction Outbound -Priority 140 `
+ -SourceAddressPrefix * -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange 443
+
+  $ASERule6 = New-AzureRmNetworkSecurityRuleConfig -Name AllAllowSQL1 -Description "Allow SQL Connectivity" `
+ -Access Allow -Protocol * -Direction Outbound -Priority 150 `
+ -SourceAddressPrefix * -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange 1433
+
+  $ASERule7 = New-AzureRmNetworkSecurityRuleConfig -Name DenyAllOutbound `
+ -Access Deny -Protocol * -Direction Outbound -Priority 500 `
+ -SourceAddressPrefix * -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange *
+
+  $ASERule8 = New-AzureRmNetworkSecurityRuleConfig -Name DenyAllInbound `
+ -Access Deny -Protocol * -Direction Inbound -Priority 500 `
+ -SourceAddressPrefix * -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange *
+ 
+ #endregion
+
+##BE Rules
+#region
+  $BERule1 = New-AzureRmNetworkSecurityRuleConfig -Name DenyAllInbound -Description "Deny All Inbound" `
+ -Access Deny -Protocol * -Direction Inbound -Priority 500 `
+ -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * `
+ -DestinationPortRange *
+
+  $BERule2 = New-AzureRmNetworkSecurityRuleConfig -Name HTTPS-In -Description "Allow Inbound HTTPS" `
+ -Access Allow -Protocol Tcp -Direction Inbound -Priority 110 `
+ -SourceAddressPrefix Internet -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange 443
+
+  $BERule3 = New-AzureRmNetworkSecurityRuleConfig -Name HTTP-In -Description "Allow Inbound HTTP" `
+ -Access Allow -Protocol Tcp -Direction Inbound -Priority 120 `
+ -SourceAddressPrefix Internet -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange 80
+ 
+   $BERule4 = New-AzureRmNetworkSecurityRuleConfig -Name DNS-In -Description "Allow Inbound DNS" `
+ -Access Allow -Protocol Tcp -Direction Inbound -Priority 130 `
+ -SourceAddressPrefix * -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange 53
+
+  $BERule5 = New-AzureRmNetworkSecurityRuleConfig -Name DenyAllOutbound -Description "Deny All Outbound" `
+ -Access Deny -Protocol * -Direction Outbound -Priority 500 `
+ -SourceAddressPrefix * -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange *
+
+  $BERule6 = New-AzureRmNetworkSecurityRuleConfig -Name HTTPS-Out -Description "Allow Outbound HTTPS" `
+ -Access Allow -Protocol Tcp -Direction Outbound -Priority 110 `
+ -SourceAddressPrefix * -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange 443
+
+  $BERule7 = New-AzureRmNetworkSecurityRuleConfig -Name HTTP-Out -Description "Allow Outbound HTTP" `
+ -Access Allow -Protocol Tcp -Direction Outbound -Priority 120 `
+ -SourceAddressPrefix * -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange 80
+ 
+   $BERule8 = New-AzureRmNetworkSecurityRuleConfig -Name RDP-in -Description "Allow Inbound RDP" `
+ -Access Allow -Protocol Tcp -Direction Outbound -Priority 140 `
+ -SourceAddressPrefix * -SourcePortRange * `
+ -DestinationAddressPrefix * -DestinationPortRange 3389
+
+ #endregion
+
+Write-Host "=>" -ForegroundColor Yellow
+Write-Host "=> Building Network Security Groups" -ForegroundColor Yellow
+##Build NSGs
+#region
+$WafNsg = New-AzureRmNetworkSecurityGroup -Name "WafNsg" -ResourceGroupName $RgName -Location $Region `
+                                          -SecurityRules $WAFRule1,$WAFRule2,$WAFRule3,$WAFRule4,$WAFRule5,$WAFRule6,$WAFRule7,$WAFRule8 `
+                                          -Force -WarningAction SilentlyContinue | out-null 
+$AseWebNsg = New-AzureRmNetworkSecurityGroup -Name "AseWebNsg" -ResourceGroupName $RgName -Location $Region `
+                                             -SecurityRules $ASERule1,$ASERule2,$ASERule3,$ASERule4,$ASERule5,$ASERule6,$ASERule7,$ASERule8 `
+                                             -Force -WarningAction SilentlyContinue | Out-Null
+$BENsg = New-AzureRmNetworkSecurityGroup -Name "BENsg" -ResourceGroupName $RgName -Location $Region `
+                                             -SecurityRules $BERule1,$BERule2,$BERule3,$BERule4,$BERule5,$BERule6,$BERule7,$BERule8 `
+                                             -Force -WarningAction SilentlyContinue | Out-Null
+#endregion
+
+Write-Host "=>" -ForegroundColor Yellow
+Write-Host "=> Applying Network Security Groups to vNet, $VnetName " -ForegroundColor Yellow
+##Apply NSGs to vNet
+#region
+$vnet = Get-AzureRmVirtualNetwork -ResourceGroupName $RgName -Name $VnetName
+Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $vnet.Subnets.name[0] `
+                                      -AddressPrefix $vnet.Subnets.AddressPrefix[0]`
+                                      -NetworkSecurityGroup $WafNSG  | Out-Null
+Set-AzureRmVirtualNetwork -VirtualNetwork $vnet  | Out-Null
+ 
+$vnet = Get-AzureRmVirtualNetwork -ResourceGroupName $RgName -Name $VnetName
+Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $vnet.Subnets.name[1] `
+                                      -AddressPrefix $vnet.Subnets.AddressPrefix[1]`
+                                      -NetworkSecurityGroup $AseWebNSG  | Out-Null
+Set-AzureRmVirtualNetwork -VirtualNetwork $vnet  | Out-Null
+$vnet = Get-AzureRmVirtualNetwork -ResourceGroupName $RgName -Name $VnetName
+Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $vnet.Subnets.name[2] `
+                                      -AddressPrefix $vnet.Subnets.AddressPrefix[2]`
+                                      -NetworkSecurityGroup $BENsg  | Out-Null
+Set-AzureRmVirtualNetwork -VirtualNetwork $vnet  | Out-Null
+#endregion
+
+Write-Host "=>" -ForegroundColor Yellow
+Write-Host "=>" -ForegroundColor Yellow
+Write-Host "=> Deployment Complete!" -ForegroundColor Yellow
