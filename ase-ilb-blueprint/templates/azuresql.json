@@ -80,7 +80,7 @@
   "variables": {},
   "resources": [
     {
-      "apiVersion": "2014-04-01-preview",
+      "apiVersion": "2015-01-01",
       "location": "[parameters('location')]",
       "name": "[parameters('sqlServerName')]",
       "properties": {
@@ -91,7 +91,7 @@
       "type": "Microsoft.Sql/servers"
     },
     {
-      "apiVersion": "2014-04-01",
+      "apiVersion": "2015-01-01",
       "dependsOn": [
         "[concat('Microsoft.Sql/servers/', parameters('sqlServerName'))]"
       ],
@@ -109,7 +109,7 @@
       "type": "Microsoft.Sql/servers/databases",
       "name": "[concat(parameters('sqlServerName'), '/', parameters('databasesNames')[copyIndex()])]",
       "location": "[parameters('location')]",
-      "apiVersion": "2014-04-01-preview",
+      "apiVersion": "2015-01-01",
       "dependsOn": [
         "[concat('Microsoft.Sql/servers/', parameters('sqlServerName'))]",
         "[concat('Microsoft.Sql/servers/', parameters('sqlServerName') ,'/elasticpools/', parameters('elasticPoolName'))]"
@@ -125,7 +125,7 @@
       }
     },
     {
-      "apiVersion": "2014-04-01-preview",
+      "apiVersion": "2015-01-01",
       "dependsOn": [
         "[concat('Microsoft.Sql/servers/', parameters('sqlServerName'))]"
       ],
