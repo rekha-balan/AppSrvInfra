@@ -27,7 +27,7 @@
         }
       },
       "databaseName": {
-        "type": "array",
+        "type": "string",
         "metadata": {
           "description": "The SQL Databases names."
         }
